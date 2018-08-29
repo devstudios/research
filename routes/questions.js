@@ -28,23 +28,28 @@ router.get('/gethomework', function(req, res, next) {
     let new_id_arr = [];
 
     async function getArray(){
-        let idsArr = await Questions.find({id: { $gt: 1 }}, { id: 1});
-        return idsArr;
+         let idsArr = await Questions.find({id: { $gt: 1 }}, { id: 1});
+        // let duplicates = Questions.aggregate([
+        //     {"$group" : { "_id": "$id", "count": { "$sum": 1 } } },
+        //     {"$match": {"_id" :{ "$ne" : null } ,
+        //     "count" : {"$gt": 1} } }, 
+        //     {"$project": {"id" : "$_id", "_id" : 0} }
+        // ]);
+       
+    return idsArr;
     }
     getArray()
     .then((obj)=>{
         for (i = 0;  i < obj.length ; i++) {
              existingIds.push(obj[i].id);
         }
-      
-        // console.log(existingIds);
     })
     .catch((err)=>{
         console.log(err);
     });
 
     let options = {
-        uri: 'https://www.homeworkmarket.com/api/questions?offset=0&limit=10',
+        uri: 'https://www.homeworkmarket.com/api/questions?offset=0&limit=100',
         auth: {
             bearer: 'z9pPavgygpzzlRKZ18MNy9Wq2RDuVzFsQYs5sWVGdLy',
         },
@@ -70,7 +75,7 @@ router.get('/gethomework', function(req, res, next) {
                 'auth': {
                     'bearer': 'z9pPavgygpzzlRKZ18MNy9Wq2RDuVzFsQYs5sWVGdLy'
                 }
-                }, (err, response, body) => {
+                },(err, response, body) => {
                     if(err) console.log(err);
                    
                     let id = JSON.parse(body).question.id;
@@ -78,29 +83,22 @@ router.get('/gethomework', function(req, res, next) {
                     let questionBody = JSON.parse(body).question.body;
                     let fos = JSON.parse(body).question.fieldOfStudy.name;
                     
-                    // for (i = 0; i < id.length; i++) {
-                    //     ids.push(id);
-                    // }
-                    getids(id); 
-
-                    // let questions = new Questions({
-                    //     id: id,
-                    //     title: title,
-                    //     body: questionBody,
-                    //     fos: fos
-                    // });
-                    // questions.save();
+                    compareIds({id:id, title: title, questionBody: questionBody, fos:fos});
             });
         });
-        function getids(x){
-            
-            if (existingIds.indexOf(x) == -1) {
-                console.log("run command");
-               
-                
-            }
+        function compareIds(obj){
+                let pos = existingIds.indexOf(obj.id);
+                console.log(existingIds.indexOf(obj.id));
+                 if(pos == -1) {
+                    let questions = new Questions({
+                        id: obj.id,
+                        title: obj.title,
+                        body: obj.questionBody,
+                        fos: obj.fos
+                    });
+                    questions.save();
+                 }
         }
-        
     })
     .catch(function (err) {
         console.log(err);
