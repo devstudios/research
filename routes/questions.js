@@ -82,19 +82,31 @@ router.get('/gethomework', function(req, res, next) {
                     let title = JSON.parse(body).question.title;
                     let questionBody = JSON.parse(body).question.body;
                     let fos = JSON.parse(body).question.fieldOfStudy.name;
-                    
-                    compareIds({id:id, title: title, questionBody: questionBody, fos:fos});
+                    let attachments = JSON.parse(body).question.attachments;
+                    let paths = [];
+
+                    if(attachments.length > 0 ){
+                        for (i = 0;  i < attachments.length ; i++){
+                        
+                            paths.push(`https://www.homeworkmarket.com${attachments[i].path.path}`);
+                        }
+                    } else {
+                        paths.push([]);
+                    }
+                    // console.log(paths);
+                    compareIds({id:id, title: title, questionBody: questionBody, fos:fos, paths: paths});
             });
         });
         function compareIds(obj){
                 let pos = existingIds.indexOf(obj.id);
-                console.log(existingIds.indexOf(obj.id));
+                //console.log(existingIds.indexOf(obj.id));
                  if(pos == -1) {
                     let questions = new Questions({
                         id: obj.id,
                         title: obj.title,
                         body: obj.questionBody,
-                        fos: obj.fos
+                        fos: obj.fos,
+                        paths: obj.paths
                     });
                     questions.save();
                  }
